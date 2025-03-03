@@ -1,0 +1,162 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "authorship_tag": "ABX9TyNcfdURGQDvzWMPEtHGDBCS",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/leburik-1/machine_learning/blob/main/image_processing\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 3,
+      "metadata": {
+        "id": "Zt0454GlnF5C"
+      },
+      "outputs": [],
+      "source": [
+        "import torch\n",
+        "import torchvision.transforms as transforms\n",
+        "from PIL import Image\n",
+        "import matplotlib.pyplot as plt\n",
+        "import os\n",
+        "from google.colab import drive\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "drive.mount('/content/drive')\n",
+        "\n",
+        "image_folder = \"/content/drive/MyDrive/ml_data/\"\n",
+        "\n",
+        "image_files = [f for f in os.listdir(image_folder) if f.endswith(('.png', '.jpg', '.jpeg'))]\n",
+        "\n",
+        "transform = transforms.Compose([\n",
+        "    transforms.Resize((256, 256)),\n",
+        "    transforms.ToTensor()\n",
+        "])\n",
+        "\n",
+        "image_tensors = []\n",
+        "for img_name in image_files:\n",
+        "  image_path = os.path.join(image_folder, img_name)\n",
+        "  image = Image.open(image_path).convert(\"RGB\")\n",
+        "  tensor_image = transform(image)\n",
+        "  image_tensors.append(tensor_image)\n",
+        "\n",
+        "  # plt.imshow(tensor_image)\n",
+        "  # plt.title(f\"Loaded Image: {img_name}\")\n",
+        "  # plt.axis(\"off\")\n",
+        "  # plt.show()\n",
+        "\n",
+        "image_tensors = torch.stack(image_tensors)\n",
+        "print(f\"Image batch tensor shape: {image_tensors.shape}\")\n",
+        "\n",
+        "brightness_values = image_tensors.mean(dim=[1,2,3])\n",
+        "\n",
+        "for i, brightness in enumerate(brightness_values):\n",
+        "  print(f\"Image {i+1} Brightness: {brightness.item():.4f}\")\n",
+        "\n",
+        "# Higher mean values → Brighter images\n",
+        "# Lower mean values → Darker images\n",
+        "# plt.figure(figsize=(8,4))\n",
+        "# plt.hist(brightness_values.numpy(), bins=10, color=\"blue\",alpha=0.7)\n",
+        "# plt.xlabel(\"Brightness Value\")\n",
+        "# plt.ylabel(\"Number of Images\")\n",
+        "# plt.title(\"Brightness Distribution of Images\")\n",
+        "# plt.show()\n",
+        "\n",
+        "# compute the mean for each channel (R, G, B)\n",
+        "channel_means = image_tensors.mean(dim=[2,3])\n",
+        "\n",
+        "# Extract individual channel means\n",
+        "red_mean = channel_means[:,0] # mean of red channel\n",
+        "green_mean = channel_means[:,1] # mean of Green channeremrbku\n",
+        "blue_mean = channel_means[1:2]\n",
+        "\n",
+        "print(\"Red channel Means: \", red_mean)\n",
+        "print(\"Green channel Mean \", green_mean)\n",
+        "print(\"Blue channel Mean  \", blue_mean)"
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "7G77nVZ0nUL3",
+        "outputId": "70b6335d-16f6-44d4-ff42-0b3676635c22"
+      },
+      "execution_count": 14,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Drive already mounted at /content/drive; to attempt to forcibly remount, call drive.mount(\"/content/drive\", force_remount=True).\n",
+            "Image batch tensor shape: torch.Size([6, 3, 256, 256])\n",
+            "Image 1 Brightness: 0.0161\n",
+            "Image 2 Brightness: 0.1469\n",
+            "Image 3 Brightness: 0.4960\n",
+            "Image 4 Brightness: 0.0796\n",
+            "Image 5 Brightness: 0.3846\n",
+            "Image 6 Brightness: 0.0714\n",
+            "Red channel Means:  tensor([0.0161, 0.0111, 0.3618, 0.0850, 0.3271, 0.0811])\n",
+            "Green channel Mean  tensor([0.0161, 0.1834, 0.5350, 0.0789, 0.3776, 0.0658])\n",
+            "Blue channel Mean   tensor([[0.0111, 0.1834, 0.2463]])\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!ls \"/content/drive/MyDrive/ml_data\""
+      ],
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "hKh1q4Fj3dR0",
+        "outputId": "80fcea57-538c-4995-9a25-2be9d8041858"
+      },
+      "execution_count": 5,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "algorithm.jpg\t\tcross.jpg  extragalactic.png  horse2zebra_0.4.0_1.pth\n",
+            "cross-4062996_1280.jpg\tcv.jpg\t   gax1.jpg\t      names.txt\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "XnDfZSuW4G3S"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ]
+}
